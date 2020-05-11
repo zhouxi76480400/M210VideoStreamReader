@@ -15,4 +15,4 @@ add_executable(M210VideoStreamReader
         ${PROJECT_SOURCE_DIR}/linux_helper/dji_linux_helpers.cpp
         )
 
-target_link_libraries(M210VideoStreamReader lib/${CMAKE_HOST_SYSTEM_PROCESSOR}/libdjiosdk-core.a pthread)
+target_link_libraries(M210VideoStreamReader ${PROJECT_SOURCE_DIR}/lib/${CMAKE_HOST_SYSTEM_PROCESSOR}/libdjiosdk-core.a pthread)
