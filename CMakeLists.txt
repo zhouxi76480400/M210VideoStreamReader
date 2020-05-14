@@ -1,18 +1,18 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8)
 project(M210VideoStreamReader)
 
-include_directories("inc")
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(DJIOSDK 0)
+set(DJIOSDK_MINOR_VERSION 1)
+set(DJIOSDK_PATCH_VERSION 0)
+set(DJIOSDK_VERSION
+        ${DJIOSDK_MAJOR_VERSION}.${DJIOSDK_MINOR_VERSION}.${DJIOSDK_PATCH_VERSION})
 
-message(${CMAKE_HOST_SYSTEM_PROCESSOR})
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/libs)
 
-add_executable(M210VideoStreamReader
-        main.cpp
-        ${PROJECT_SOURCE_DIR}/linux_helper/dji_linux_environment.hpp
-        ${PROJECT_SOURCE_DIR}/linux_helper/dji_linux_environment.cpp
-        ${PROJECT_SOURCE_DIR}/linux_helper/dji_linux_helpers.hpp
-        ${PROJECT_SOURCE_DIR}/linux_helper/dji_linux_helpers.cpp
-        )
+add_definitions(-DADVANCED_SENSING)
 
-target_link_libraries(M210VideoStreamReader ${PROJECT_SOURCE_DIR}/lib/${CMAKE_HOST_SYSTEM_PROCESSOR}/libdjiosdk-core.a pthread)
+add_subdirectory(osdk-core)
+add_subdirectory(VideoStreamReader)
