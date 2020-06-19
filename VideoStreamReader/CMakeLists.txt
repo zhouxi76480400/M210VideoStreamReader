@@ -42,6 +42,8 @@ add_executable(${PROJECT_NAME}
         ${HELPER_FUNCTIONS_DIR}/dji_linux_environment.cpp
         ${HELPER_FUNCTIONS_DIR}/dji_linux_helpers.cpp
         main.cpp
+        SocketFileServer.h
+        SocketFileServer.cpp
         )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCV_INCLUDE_DIRS})

@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/advanced-sensing-prefix/src/advanced-sensing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/osdk-core/advanced-sensing-prefix/src/advanced-sensing" vcs="Git" />
   </component>
 </project>
