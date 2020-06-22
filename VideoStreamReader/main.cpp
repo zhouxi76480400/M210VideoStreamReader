@@ -2,12 +2,14 @@
 #include <iostream>
 #include "dji_linux_helpers.hpp"
 //#include <pthread.h>
-#include "SocketFileServer.h"
 
-//#ifdef OPEN_CV_INSTALLED
-//#include "opencv2/opencv.hpp"
-//#include "opencv2/highgui/highgui.hpp"
-//#endif
+#include "SocketFileServer.h"
+#include "opencv2/opencv.hpp"
+#include "opencv2/highgui/highgui.hpp"
+using namespace cv;
+
+#define kTrueWidth 640
+#define kTrueHeight 512
 
 
 #include <signal.h>
@@ -16,24 +18,36 @@
 #include <unistd.h>
 
 using namespace DJI::OSDK;
-//using namespace cv;
 using namespace std;
 
 SocketFileServer server;
 
 void show_rgb(CameraRGBImage img, char* name) {
-//    cout << "#### Got image from:\t" << string(name) << endl;
-//#ifdef OPEN_CV_INSTALLED
-//    Mat mat(img.height, img.width, CV_8UC3, img.rawData.data(), img.width*3);
-//    cvtColor(mat, mat, COLOR_RGB2BGR);
-//    imshow(name,mat);
-//    cv::waitKey(1);
-//#endif
     void * data = img.rawData.data();
     size_t size = img.height * img.width * 3;
-//    cout << "Got img data: " << data << " size: " << size << "tid=" << pthread_self() << endl;
-    int write_size = server.write(data,size);
-//    cout << "write: " << write_size << endl;
+    //run mat
+    Mat mat(img.height, img.width, CV_8UC3, data, img.width*3);
+    cvtColor(mat, mat, COLOR_RGB2BGR);
+    // crop
+    Mat newImage;
+    int tmpWidth = (((float)kTrueWidth / (float)kTrueHeight) * (float)img.height);
+    int start_x = ((float)img.width - (float)tmpWidth) / 2.0f;
+    Rect rect(start_x, 0, tmpWidth, img.height);
+    newImage = mat(rect);
+    mat.release();
+    mat = newImage;
+    newImage.release();
+    // resize
+    resize(mat, newImage, Size(kTrueWidth, kTrueHeight), 0, 0, INTER_LINEAR);
+    mat.release();
+    mat = newImage;
+    newImage.release();
+    // get data and size
+    void * mat_data = mat.data;
+    int data_size = kTrueWidth * kTrueHeight * 3 * sizeof(uint8_t);
+    //
+    server.write(mat_data,data_size);
+    mat.release();
 }
 
 void signal_pipe_handler(int sig) {
