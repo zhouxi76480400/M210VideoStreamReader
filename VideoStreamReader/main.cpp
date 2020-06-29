@@ -1,9 +1,9 @@
 #include "dji_vehicle.hpp"
 #include <iostream>
 #include "dji_linux_helpers.hpp"
-//#include <pthread.h>
 
 #include "SocketFileServer.h"
+#include "TCPServer.h"
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui/highgui.hpp"
 using namespace cv;
@@ -20,7 +20,9 @@ using namespace cv;
 using namespace DJI::OSDK;
 using namespace std;
 
+bool isTCP = true;
 SocketFileServer server;
+TCPServer server_tcp(20002);
 
 void show_rgb(CameraRGBImage img, char* name) {
     void * data = img.rawData.data();
@@ -46,13 +48,21 @@ void show_rgb(CameraRGBImage img, char* name) {
     void * mat_data = mat.data;
     int data_size = kTrueWidth * kTrueHeight * 3 * sizeof(uint8_t);
     //
-    server.write(mat_data,data_size);
+    if(isTCP) {
+        server_tcp.write(mat_data,data_size);
+    } else {
+        server.write(mat_data,data_size);
+    }
     mat.release();
 }
 
 void signal_pipe_handler(int sig) {
     cout << "SIGPIPE !" << endl;
-    server.closeClientFd();
+    if(isTCP) {
+        server_tcp.closeClientFd();
+    } else {
+        server.closeClientFd();
+    }
 }
 
 Vehicle* vehicle;
@@ -63,7 +73,12 @@ bool isRunning = true;
 
 int main(int argc, char** argv) {
     signal(SIGPIPE,signal_pipe_handler);
-    int ret = server.createService();
+    int ret = -1;
+    if(isTCP) {
+        ret = server_tcp.createService();
+    }else {
+        ret = server.createService();
+    }
     if(ret >= 0) {
         // Setup OSDK.
         bool enableAdvancedSensing = true;
@@ -91,7 +106,13 @@ int main(int argc, char** argv) {
             isRunning = true;
 
             while (isRunning) {
-                if(server.getClientFd() >= 0) {
+                int client_fd = -1;
+                if(isTCP) {
+                    client_fd = server_tcp.getClientFd();
+                } else {
+                    client_fd = server.getClientFd();
+                }
+                if(client_fd >= 0) {
                     if(mainCamResult && vehicle->advancedSensing->newMainCameraImageReady()) {
                         if(vehicle->advancedSensing->getMainCameraImage(mainImg)) {
                             show_rgb(mainImg, mainName);
@@ -99,7 +120,11 @@ int main(int argc, char** argv) {
                     }
                     usleep(2e4);
                 } else {
-                    server.accept();
+                    if(isTCP) {
+                        server_tcp.accept();
+                    }else {
+                        server.accept();
+                    }
                 }
             }
             vehicle->advancedSensing->stopMainCameraStream();
